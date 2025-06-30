@@ -30,8 +30,8 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        // 登录成功，重定向到主页
-        router.push('/')
+        // 登录成功，重定向到仪表板
+        router.push('/dashboard')
       } else {
         setError(data.error || '登录失败')
       }

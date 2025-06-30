@@ -21,20 +21,24 @@ model User {
   avatar    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  animes    Anime[]
 
   @@map("users")
 }
 
 model Anime {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  imageUrl    String?
-  status      String   @default("ongoing")
-  episodes    Int      @default(0)
-  rating      Float    @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  imageUrl       String?
+  status         String   @default("未开播")
+  episodes       Int      @default(0)
+  currentEpisode Int      @default(0)
+  rating         Float    @default(0)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@map("animes")
 }
