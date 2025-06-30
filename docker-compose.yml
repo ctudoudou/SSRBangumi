@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库服务
+  postgres:
+    image: postgres:15-alpine
+    container_name: ssrbangumi-postgres
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ssrbangumi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Web 应用服务
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssrbangumi-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssrbangumi-network
+    volumes:
+      - ./uploads:/app/uploads
+
+  # 可选：数据库管理工具 pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ssrbangumi-pgadmin
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - ssrbangumi-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  ssrbangumi-network:
+    driver: bridge
