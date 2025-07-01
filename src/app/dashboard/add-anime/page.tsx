@@ -206,6 +206,28 @@ export default function AddAnimePage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="https://example.com/image.jpg"
               />
+              
+              {/* 图片预览 */}
+              {formData.imageUrl && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">预览:</p>
+                  <div className="w-48 h-64 border border-gray-300 rounded-lg overflow-hidden bg-gray-50">
+                    <img
+                      src={formData.imageUrl}
+                      alt="封面预览"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                      图片加载失败
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-4">
