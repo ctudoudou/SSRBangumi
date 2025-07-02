@@ -14,14 +14,15 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
+  id        String      @id @default(cuid())
+  email     String      @unique
+  username  String      @unique
   password  String
   avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   animes    Anime[]
+  rssFeeds  RssFeed[]
 
   @@map("users")
 }
@@ -41,4 +42,37 @@ model Anime {
   updatedAt      DateTime @updatedAt
 
   @@map("animes")
+}
+
+model RssFeed {
+  id            String    @id @default(cuid())
+  name          String
+  url           String
+  description   String?
+  isActive      Boolean   @default(true)
+  updateFreq    Int       @default(60) // 更新频次（分钟）
+  lastChecked   DateTime? // 最后检查时间
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  rssItems      RssItem[]
+
+  @@map("rss_feeds")
+}
+
+model RssItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  link        String
+  pubDate     DateTime?
+  guid        String?  @unique
+  processed   Boolean  @default(false)
+  rssFeedId   String
+  rssFeed     RssFeed  @relation(fields: [rssFeedId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("rss_items")
 }

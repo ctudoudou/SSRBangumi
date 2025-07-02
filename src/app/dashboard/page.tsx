@@ -107,6 +107,9 @@ export default function DashboardPage() {
                 <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
                   番剧库
                 </Link>
+                <Link href="/dashboard/settings" className="text-gray-300 hover:text-white transition-colors">
+                  设置
+                </Link>
               </div>
             </div>
             <div className="flex items-center space-x-4">
