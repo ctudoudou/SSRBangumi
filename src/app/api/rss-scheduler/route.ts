@@ -5,7 +5,7 @@ import rssScheduler from '@/lib/rss-scheduler'
 // 获取RSS调度状态和未处理项目
 export async function GET(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json({ error: '缺少认证token' }, { status: 401 })
     }
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 // 手动触发RSS源更新
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const token = request.cookies.get('auth-token')?.value
     if (!token) {
       return NextResponse.json({ error: '缺少认证token' }, { status: 401 })
     }
