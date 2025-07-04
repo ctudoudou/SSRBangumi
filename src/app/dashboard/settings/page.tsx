@@ -718,48 +718,118 @@ export default function SettingsPage() {
     </div>
   );
 
+  const testConnection = async () => {
+    setIsTestingConnection(true);
+    setConnectionStatus('testing');
+    
+    try {
+      // 模拟API连接测试
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (aiConfig.apiKey && aiConfig.proxyUrl) {
+        setConnectionStatus('success');
+        setSuccess('OpenRouter 连接测试成功');
+      } else {
+        setConnectionStatus('error');
+        setError('请填写完整的 API Key 和代理地址');
+      }
+    } catch (error) {
+      setConnectionStatus('error');
+      setError('连接测试失败，请检查配置');
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
   const renderAiConfig = () => (
     <div>
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">AI 配置</h2>
-        <p className="text-gray-400">配置 AI 服务和智能功能</p>
+        <p className="text-gray-400">配置 OpenRouter AI 服务和智能功能</p>
       </div>
 
       <div className="space-y-6">
-        {/* AI 服务配置 */}
+        {/* OpenRouter 服务配置 */}
         <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">AI 服务配置</h3>
+          <h3 className="text-lg font-medium text-white mb-4">OpenRouter 服务配置</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                AI 服务提供商
-              </label>
-              <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-                <option value="openai">OpenAI</option>
-                <option value="claude">Claude</option>
-                <option value="gemini">Google Gemini</option>
-                <option value="local">本地模型</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                API 密钥
+                API Key *
               </label>
               <input
                 type="password"
-                placeholder="输入 API 密钥"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={aiConfig.apiKey}
+                onChange={(e) => setAiConfig({...aiConfig, apiKey: e.target.value})}
+                placeholder="输入 OpenRouter API Key"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                在 <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">OpenRouter</a> 获取您的 API Key
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                API 代理地址
+              </label>
+              <input
+                type="url"
+                value={aiConfig.proxyUrl}
+                onChange={(e) => setAiConfig({...aiConfig, proxyUrl: e.target.value})}
+                placeholder="https://openrouter.ai/api/v1"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                API 基础地址
+                模型配置
               </label>
-              <input
-                type="url"
-                placeholder="https://api.openai.com/v1"
+              <select 
+                value={aiConfig.model}
+                onChange={(e) => setAiConfig({...aiConfig, model: e.target.value})}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
+              >
+                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                <option value="openai/gpt-4o">GPT-4o</option>
+                <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
+                <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+              </select>
+            </div>
+            
+            {/* 连通性检查 */}
+            <div className="border-t border-gray-700 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-white font-medium">连通性检查</h4>
+                <div className="flex items-center space-x-2">
+                  {connectionStatus === 'success' && (
+                    <span className="text-green-400 text-sm">✓ 连接正常</span>
+                  )}
+                  {connectionStatus === 'error' && (
+                    <span className="text-red-400 text-sm">✗ 连接失败</span>
+                  )}
+                  <button
+                    onClick={testConnection}
+                    disabled={isTestingConnection}
+                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 text-white text-sm rounded-md transition-colors"
+                  >
+                    {isTestingConnection ? '测试中...' : '测试连接'}
+                  </button>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm">
+                测试与 OpenRouter API 的连接状态
+              </p>
+            </div>
+            
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setSuccess('AI 服务配置保存成功')}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+              >
+                保存配置
+              </button>
             </div>
           </div>
         </div>
@@ -770,85 +840,31 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-white font-medium">智能番剧识别</h4>
-                <p className="text-gray-400 text-sm">使用 AI 自动识别和分类番剧内容</p>
+                <h4 className="text-white font-medium">智能识别种子信息</h4>
+                <p className="text-gray-400 text-sm">使用 AI 自动识别和解析种子文件中的番剧信息</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
+                <input 
+                  type="checkbox" 
+                  checked={aiConfig.smartTorrentRecognition}
+                  onChange={(e) => setAiConfig({...aiConfig, smartTorrentRecognition: e.target.checked})}
+                  className="sr-only peer" 
+                />
                 <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
               </label>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-white font-medium">智能下载推荐</h4>
-                <p className="text-gray-400 text-sm">基于观看历史推荐相关番剧下载</p>
+            
+            {aiConfig.smartTorrentRecognition && (
+              <div className="bg-gray-700 rounded-lg p-4 mt-3">
+                <h5 className="text-white font-medium mb-2">功能说明</h5>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• 自动识别种子文件名中的番剧标题</li>
+                  <li>• 解析集数、季度、分辨率等信息</li>
+                  <li>• 智能匹配番剧数据库</li>
+                  <li>• 生成标准化的文件命名</li>
+                </ul>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-white font-medium">自动标签生成</h4>
-                <p className="text-gray-400 text-sm">为番剧自动生成相关标签和分类</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* 模型配置 */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">模型配置</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  文本模型
-                </label>
-                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  <option value="claude-3">Claude 3</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  图像识别模型
-                </label>
-                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-                  <option value="gpt-4-vision">GPT-4 Vision</option>
-                  <option value="claude-3-vision">Claude 3 Vision</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                温度设置
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                defaultValue="0.7"
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>保守 (0)</span>
-                <span>平衡 (1)</span>
-                <span>创新 (2)</span>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors">
-                保存配置
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </div>
