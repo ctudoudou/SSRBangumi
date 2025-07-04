@@ -57,12 +57,13 @@ export default function SettingsPage() {
   // 下载服务配置状态
   const [downloadConfig, setDownloadConfig] = useState({
     rpcUrl: 'http://localhost:6800/jsonrpc',
-    rpcSecret: 'your_secret_token_here',
-    maxConcurrent: '3',
-    maxConnections: '16',
-    diskCache: '32M'
+    rpcSecret: '',
+    downloadPath: '/downloads'
   });
-  const [isEditingConnection, setIsEditingConnection] = useState(false);
+  const [isLoadingDownloadConfig, setIsLoadingDownloadConfig] = useState(false);
+  const [isSavingDownloadConfig, setIsSavingDownloadConfig] = useState(false);
+  const [isTestingAria2, setIsTestingAria2] = useState(false);
+  const [aria2TestResult, setAria2TestResult] = useState<{success: boolean, message: string} | null>(null);
   
   // AI 配置状态
   const [aiConfig, setAiConfig] = useState({
@@ -71,6 +72,8 @@ export default function SettingsPage() {
     model: 'anthropic/claude-3.5-sonnet',
     smartTorrentRecognition: false
   });
+  const [isLoadingAiConfig, setIsLoadingAiConfig] = useState(false);
+  const [isSavingAiConfig, setIsSavingAiConfig] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -81,6 +84,8 @@ export default function SettingsPage() {
   useEffect(() => {
     checkAuth();
     fetchRssFeeds();
+    fetchAiConfig();
+    fetchDownloadConfig();
     if (showScheduler) {
       fetchRssItems();
     }
@@ -90,6 +95,127 @@ export default function SettingsPage() {
     // 动态设置页面标题
     document.title = '设置 | SSR Bangumi';
   }, []);
+
+  const fetchAiConfig = async () => {
+    setIsLoadingAiConfig(true);
+    try {
+      const response = await fetch('/api/ai-config');
+      if (response.ok) {
+        const data = await response.json();
+        setAiConfig(data.aiConfig);
+      }
+    } catch (error) {
+      console.error('获取AI配置失败:', error);
+    } finally {
+      setIsLoadingAiConfig(false);
+    }
+  };
+
+  const saveAiConfig = async () => {
+    setIsSavingAiConfig(true);
+    try {
+      const response = await fetch('/api/ai-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(aiConfig),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || 'AI配置保存成功');
+      } else {
+        const data = await response.json();
+        setError(data.error || '保存AI配置失败');
+      }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
+    } finally {
+      setIsSavingAiConfig(false);
+    }
+  };
+
+  const fetchDownloadConfig = async () => {
+    setIsLoadingDownloadConfig(true);
+    try {
+      const response = await fetch('/api/download-config');
+      if (response.ok) {
+        const data = await response.json();
+        setDownloadConfig(data.downloadConfig);
+      }
+    } catch (error) {
+      console.error('获取下载配置失败:', error);
+    } finally {
+      setIsLoadingDownloadConfig(false);
+    }
+  };
+
+  const saveDownloadConfig = async () => {
+    setIsSavingDownloadConfig(true);
+    try {
+      const response = await fetch('/api/download-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rpcUrl: downloadConfig.rpcUrl,
+          rpcSecret: downloadConfig.rpcSecret
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || '下载配置保存成功');
+      } else {
+        const data = await response.json();
+        setError(data.error || '保存下载配置失败');
+      }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
+    } finally {
+      setIsSavingDownloadConfig(false);
+    }
+  };
+
+  const testAria2Connection = async () => {
+    setIsTestingAria2(true);
+    setAria2TestResult(null);
+    try {
+      const response = await fetch('/api/download-config/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rpcUrl: downloadConfig.rpcUrl,
+          rpcSecret: downloadConfig.rpcSecret
+        }),
+      });
+
+      const data = await response.json();
+      setAria2TestResult({
+        success: data.success,
+        message: data.message || data.error
+      });
+
+      if (data.success) {
+        setSuccess(data.message);
+      } else {
+        setError(data.error);
+      }
+    } catch (error) {
+      const errorMessage = '网络错误，请稍后重试';
+      setAria2TestResult({
+        success: false,
+        message: errorMessage
+      });
+      setError(errorMessage);
+    } finally {
+      setIsTestingAria2(false);
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -548,176 +674,102 @@ export default function SettingsPage() {
     <div>
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">下载服务配置</h2>
-        <p className="text-gray-400">配置 Aria2 下载服务和相关设置</p>
+        <p className="text-gray-400">配置 Aria2 下载服务连接信息</p>
       </div>
 
+      {isLoadingDownloadConfig && (
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+            <span className="text-gray-300">加载下载配置中...</span>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
-        {/* Aria2 服务状态 */}
+        {/* 下载路径显示 */}
         <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">Aria2 服务状态</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">服务状态</span>
-                <span className="px-2 py-1 text-xs rounded-full bg-green-900 text-green-100">
-                  运行中
-                </span>
-              </div>
-              <p className="text-sm text-gray-400 mt-2">Aria2 下载引擎正在运行</p>
-            </div>
-            <div className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300">Web UI</span>
-                <a 
-                  href="http://localhost:6880" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                >
-                  打开管理界面
-                </a>
-              </div>
-              <p className="text-sm text-gray-400 mt-2">AriaNg Web 管理界面</p>
-            </div>
+          <h3 className="text-lg font-medium text-white mb-4">下载配置</h3>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              下载目录
+            </label>
+            <input
+              type="text"
+              value={downloadConfig.downloadPath}
+              readOnly
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400 focus:outline-none cursor-not-allowed"
+              placeholder="下载路径由系统管理"
+            />
+            <p className="text-sm text-gray-500 mt-1">下载路径由系统管理，无法修改</p>
           </div>
         </div>
 
-        {/* 下载配置 */}
+        {/* Aria2 连接配置 */}
         <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">下载配置</h3>
+          <h3 className="text-lg font-medium text-white mb-4">Aria2 连接配置</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  下载目录
+                  RPC 地址 *
                 </label>
                 <input
                   type="text"
-                  value="/downloads"
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+                  value={downloadConfig.rpcUrl}
+                  onChange={(e) => setDownloadConfig({...downloadConfig, rpcUrl: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="http://localhost:6800/jsonrpc"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  最大并发下载数
+                  RPC 密钥
                 </label>
-                <select 
-                  value={downloadConfig.maxConcurrent}
-                  onChange={(e) => setDownloadConfig({...downloadConfig, maxConcurrent: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="3">3</option>
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                </select>
+                <input
+                  type="password"
+                  value={downloadConfig.rpcSecret}
+                  onChange={(e) => setDownloadConfig({...downloadConfig, rpcSecret: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="可选，如果设置了密钥请填写"
+                />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  单文件最大连接数
-                </label>
-                <select 
-                  value={downloadConfig.maxConnections}
-                  onChange={(e) => setDownloadConfig({...downloadConfig, maxConnections: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="16">16</option>
-                  <option value="32">32</option>
-                  <option value="64">64</option>
-                </select>
+            
+            {/* 连接测试结果 */}
+            {aria2TestResult && (
+              <div className={`p-4 rounded-md ${
+                aria2TestResult.success 
+                  ? 'bg-green-900/20 border border-green-700' 
+                  : 'bg-red-900/20 border border-red-700'
+              }`}>
+                <div className="flex items-center">
+                  <span className={`text-sm ${
+                    aria2TestResult.success ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {aria2TestResult.success ? '✓' : '✗'} {aria2TestResult.message}
+                  </span>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  磁盘缓存大小
-                </label>
-                <select 
-                  value={downloadConfig.diskCache}
-                  onChange={(e) => setDownloadConfig({...downloadConfig, diskCache: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="32M">32M</option>
-                  <option value="64M">64M</option>
-                  <option value="128M">128M</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button 
-                onClick={() => setSuccess('下载配置保存成功')}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
-              >
-                保存配置
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 连接信息 */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-white">连接信息</h3>
-            <button
-              onClick={() => setIsEditingConnection(!isEditingConnection)}
-              className="text-orange-400 hover:text-orange-300 text-sm transition-colors"
-            >
-              {isEditingConnection ? '取消编辑' : '编辑'}
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                RPC 地址
-              </label>
-              <input
-                type="text"
-                value={downloadConfig.rpcUrl}
-                onChange={(e) => setDownloadConfig({...downloadConfig, rpcUrl: e.target.value})}
-                readOnly={!isEditingConnection}
-                className={`w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none ${
-                  isEditingConnection ? 'focus:ring-2 focus:ring-orange-500 focus:border-transparent' : ''
-                }`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                RPC 密钥
-              </label>
-              <input
-                type={isEditingConnection ? 'text' : 'password'}
-                value={downloadConfig.rpcSecret}
-                onChange={(e) => setDownloadConfig({...downloadConfig, rpcSecret: e.target.value})}
-                readOnly={!isEditingConnection}
-                className={`w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none ${
-                  isEditingConnection ? 'focus:ring-2 focus:ring-orange-500 focus:border-transparent' : ''
-                }`}
-              />
-            </div>
-          </div>
-          {isEditingConnection && (
-            <div className="flex justify-end space-x-4 mt-4">
+            )}
+            
+            <div className="flex justify-end space-x-4">
               <button
-                onClick={() => {
-                  setIsEditingConnection(false);
-                  // 这里可以添加重置逻辑
-                }}
-                className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700 transition-colors"
+                onClick={testAria2Connection}
+                disabled={isTestingAria2 || !downloadConfig.rpcUrl}
+                className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                取消
+                {isTestingAria2 ? '测试中...' : '测试连接'}
               </button>
               <button
-                onClick={() => {
-                  setIsEditingConnection(false);
-                  setSuccess('连接信息保存成功');
-                  // 这里可以添加保存到后端的逻辑
-                }}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+                onClick={saveDownloadConfig}
+                disabled={isSavingDownloadConfig || isLoadingDownloadConfig || !downloadConfig.rpcUrl}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                保存
+                {isSavingDownloadConfig ? '保存中...' : '保存配置'}
               </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
@@ -752,6 +804,15 @@ export default function SettingsPage() {
         <h2 className="text-2xl font-bold text-white mb-2">AI 配置</h2>
         <p className="text-gray-400">配置 OpenRouter AI 服务和智能功能</p>
       </div>
+
+      {isLoadingAiConfig && (
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-3"></div>
+            <span className="text-gray-300">加载AI配置中...</span>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* OpenRouter 服务配置 */}
@@ -789,18 +850,16 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 模型配置
               </label>
-              <select 
+              <input
+                type="text"
                 value={aiConfig.model}
                 onChange={(e) => setAiConfig({...aiConfig, model: e.target.value})}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-                <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
-                <option value="openai/gpt-4o">GPT-4o</option>
-                <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-                <option value="google/gemini-pro-1.5">Gemini Pro 1.5</option>
-                <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
-              </select>
+                placeholder="输入模型名称，如: anthropic/claude-3.5-sonnet"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                常用模型: anthropic/claude-3.5-sonnet, openai/gpt-4o, google/gemini-pro-1.5
+              </p>
             </div>
             
             {/* 连通性检查 */}
@@ -830,10 +889,11 @@ export default function SettingsPage() {
             
             <div className="flex justify-end">
               <button 
-                onClick={() => setSuccess('AI 服务配置保存成功')}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+                onClick={saveAiConfig}
+                disabled={isSavingAiConfig || isLoadingAiConfig}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-600 text-white rounded-md transition-colors"
               >
-                保存配置
+                {isSavingAiConfig ? '保存中...' : '保存配置'}
               </button>
             </div>
           </div>

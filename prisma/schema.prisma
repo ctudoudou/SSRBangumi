@@ -14,15 +14,17 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  username  String      @unique
-  password  String
-  avatar    String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  animes    Anime[]
-  rssFeeds  RssFeed[]
+  id             String          @id @default(cuid())
+  email          String          @unique
+  username       String          @unique
+  password       String
+  avatar         String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  animes         Anime[]
+  rssFeeds       RssFeed[]
+  aiConfig       AiConfig?
+  downloadConfig DownloadConfig?
 
   @@map("users")
 }
@@ -75,4 +77,31 @@ model RssItem {
   updatedAt   DateTime @updatedAt
 
   @@map("rss_items")
+}
+
+model AiConfig {
+  id                      String   @id @default(cuid())
+  apiKey                  String?
+  proxyUrl                String?  @default("https://openrouter.ai/api/v1")
+  model                   String?  @default("anthropic/claude-3.5-sonnet")
+  smartTorrentRecognition Boolean  @default(false)
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("ai_configs")
+}
+
+model DownloadConfig {
+  id           String   @id @default(cuid())
+  rpcUrl       String   @default("http://localhost:6800/jsonrpc")
+  rpcSecret    String?
+  downloadPath String   @default("/downloads")
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("download_configs")
 }
