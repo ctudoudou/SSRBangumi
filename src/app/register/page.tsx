@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -14,6 +14,11 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    // 动态设置页面标题
+    document.title = '注册 | SSR Bangumi';
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

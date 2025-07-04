@@ -35,6 +35,11 @@ export default function DashboardPage() {
     fetchAnimes();
   }, []);
 
+  useEffect(() => {
+    // 动态设置页面标题
+    document.title = '番剧首页 | SSR Bangumi';
+  }, []);
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me');

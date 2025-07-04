@@ -86,6 +86,11 @@ export default function SettingsPage() {
     }
   }, [showScheduler]);
 
+  useEffect(() => {
+    // 动态设置页面标题
+    document.title = '设置 | SSR Bangumi';
+  }, []);
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me');
