@@ -36,6 +36,8 @@ interface RssItem {
   createdAt: string;
 }
 
+type MenuTab = 'rss' | 'download' | 'ai';
+
 export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
@@ -53,6 +55,7 @@ export default function SettingsPage() {
   const [showScheduler, setShowScheduler] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [activeTab, setActiveTab] = useState<MenuTab>('rss');
   const router = useRouter();
 
   useEffect(() => {
@@ -249,75 +252,36 @@ export default function SettingsPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-orange-400">SSRBangumi</h1>
-              <nav className="flex space-x-6">
-                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
-                  番剧首页
-                </Link>
-                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
-                  番剧库
-                </Link>
-                <Link href="/dashboard/settings" className="text-orange-400 hover:text-orange-300 transition-colors">
-                  设置
-                </Link>
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-300">欢迎, {user?.username}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors text-sm"
-              >
-                退出
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+  const menuItems = [
+    { id: 'rss' as MenuTab, name: 'RSS 配置', icon: '📡' },
+    { id: 'download' as MenuTab, name: '下载服务配置', icon: '⬇️' },
+    { id: 'ai' as MenuTab, name: 'AI 配置', icon: '🤖' }
+  ];
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">RSS 配置</h2>
-          <p className="text-gray-400">管理你的RSS订阅源</p>
-        </div>
+  const renderRssConfig = () => (
+    <div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">RSS 配置</h2>
+        <p className="text-gray-400">管理你的RSS订阅源</p>
+      </div>
 
-        {/* Success/Error Messages */}
-        {success && (
-          <div className="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+      {/* Action Buttons */}
+      <div className="mb-6 flex space-x-4">
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md transition-colors font-medium"
+        >
+          + 添加RSS订阅
+        </button>
+        <button
+          onClick={() => setShowScheduler(!showScheduler)}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md transition-colors font-medium"
+        >
+          {showScheduler ? '隐藏调度管理' : '显示调度管理'}
+        </button>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="mb-6 flex space-x-4">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md transition-colors font-medium"
-          >
-            + 添加RSS订阅
-          </button>
-          <button
-            onClick={() => setShowScheduler(!showScheduler)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md transition-colors font-medium"
-          >
-            {showScheduler ? '隐藏调度管理' : '显示调度管理'}
-          </button>
-        </div>
-
-        {/* Add/Edit Form */}
+      {/* Add/Edit Form */}
         {showAddForm && (
           <div className="bg-gray-800 rounded-lg p-6 mb-6">
             <h3 className="text-lg font-medium text-white mb-4">
@@ -488,69 +452,417 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* RSS Feeds List */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-700">
-            <h3 className="text-lg font-medium text-white">RSS订阅列表</h3>
+      {/* RSS Feeds List */}
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-700">
+          <h3 className="text-lg font-medium text-white">RSS订阅列表</h3>
+        </div>
+        {rssFeeds.length === 0 ? (
+          <div className="px-6 py-8 text-center">
+            <p className="text-gray-400">暂无RSS订阅</p>
           </div>
-          {rssFeeds.length === 0 ? (
-            <div className="px-6 py-8 text-center">
-              <p className="text-gray-400">暂无RSS订阅</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-700">
-              {rssFeeds.map((feed) => (
-                <div key={feed.id} className="px-6 py-4 hover:bg-gray-750 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <h4 className="text-white font-medium">{feed.name}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          feed.isActive 
-                            ? 'bg-green-900 text-green-100' 
-                            : 'bg-gray-600 text-gray-300'
-                        }`}>
-                          {feed.isActive ? '启用' : '禁用'}
-                        </span>
-                        <span className="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-100">
-                          每{feed.updateFreq}分钟
-                        </span>
-                      </div>
-                      <p className="text-gray-400 text-sm mt-1">{feed.url}</p>
-                      {feed.description && (
-                        <p className="text-gray-500 text-sm mt-1">{feed.description}</p>
-                      )}
-                      {feed.lastChecked && (
-                        <p className="text-gray-500 text-xs mt-1">
-                          最后检查: {new Date(feed.lastChecked).toLocaleString()}
-                        </p>
-                      )}
+        ) : (
+          <div className="divide-y divide-gray-700">
+            {rssFeeds.map((feed) => (
+              <div key={feed.id} className="px-6 py-4 hover:bg-gray-750 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <h4 className="text-white font-medium">{feed.name}</h4>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        feed.isActive 
+                          ? 'bg-green-900 text-green-100' 
+                          : 'bg-gray-600 text-gray-300'
+                      }`}>
+                        {feed.isActive ? '启用' : '禁用'}
+                      </span>
+                      <span className="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-100">
+                        每{feed.updateFreq}分钟
+                      </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => triggerFeedUpdate(feed.id)}
-                        className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                      >
-                        立即更新
-                      </button>
-                      <button
-                        onClick={() => handleEdit(feed)}
-                        className="text-orange-400 hover:text-orange-300 text-sm transition-colors"
-                      >
-                        编辑
-                      </button>
-                      <button
-                        onClick={() => handleDelete(feed.id)}
-                        className="text-red-400 hover:text-red-300 text-sm transition-colors"
-                      >
-                        删除
-                      </button>
-                    </div>
+                    <p className="text-gray-400 text-sm mt-1">{feed.url}</p>
+                    {feed.description && (
+                      <p className="text-gray-500 text-sm mt-1">{feed.description}</p>
+                    )}
+                    {feed.lastChecked && (
+                      <p className="text-gray-500 text-xs mt-1">
+                        最后检查: {new Date(feed.lastChecked).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => triggerFeedUpdate(feed.id)}
+                      className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                    >
+                      立即更新
+                    </button>
+                    <button
+                      onClick={() => handleEdit(feed)}
+                      className="text-orange-400 hover:text-orange-300 text-sm transition-colors"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      onClick={() => handleDelete(feed.id)}
+                      className="text-red-400 hover:text-red-300 text-sm transition-colors"
+                    >
+                      删除
+                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderDownloadConfig = () => (
+    <div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">下载服务配置</h2>
+        <p className="text-gray-400">配置 Aria2 下载服务和相关设置</p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Aria2 服务状态 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">Aria2 服务状态</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">服务状态</span>
+                <span className="px-2 py-1 text-xs rounded-full bg-green-900 text-green-100">
+                  运行中
+                </span>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">Aria2 下载引擎正在运行</p>
             </div>
-          )}
+            <div className="bg-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-300">Web UI</span>
+                <a 
+                  href="http://localhost:6880" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                >
+                  打开管理界面
+                </a>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">AriaNg Web 管理界面</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 下载配置 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">下载配置</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  下载目录
+                </label>
+                <input
+                  type="text"
+                  value="/downloads"
+                  readOnly
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  最大并发下载数
+                </label>
+                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="3">3</option>
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  单文件最大连接数
+                </label>
+                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="16">16</option>
+                  <option value="32">32</option>
+                  <option value="64">64</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  磁盘缓存大小
+                </label>
+                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="32M">32M</option>
+                  <option value="64M">64M</option>
+                  <option value="128M">128M</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors">
+                保存配置
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 连接信息 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">连接信息</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                RPC 地址
+              </label>
+              <input
+                type="text"
+                value="http://localhost:6800/jsonrpc"
+                readOnly
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                RPC 密钥
+              </label>
+              <input
+                type="password"
+                value="your_secret_token_here"
+                readOnly
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAiConfig = () => (
+    <div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">AI 配置</h2>
+        <p className="text-gray-400">配置 AI 服务和智能功能</p>
+      </div>
+
+      <div className="space-y-6">
+        {/* AI 服务配置 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">AI 服务配置</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                AI 服务提供商
+              </label>
+              <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <option value="openai">OpenAI</option>
+                <option value="claude">Claude</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="local">本地模型</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                API 密钥
+              </label>
+              <input
+                type="password"
+                placeholder="输入 API 密钥"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                API 基础地址
+              </label>
+              <input
+                type="url"
+                placeholder="https://api.openai.com/v1"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 智能功能配置 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">智能功能</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-white font-medium">智能番剧识别</h4>
+                <p className="text-gray-400 text-sm">使用 AI 自动识别和分类番剧内容</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+              </label>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-white font-medium">智能下载推荐</h4>
+                <p className="text-gray-400 text-sm">基于观看历史推荐相关番剧下载</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+              </label>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-white font-medium">自动标签生成</h4>
+                <p className="text-gray-400 text-sm">为番剧自动生成相关标签和分类</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* 模型配置 */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-medium text-white mb-4">模型配置</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  文本模型
+                </label>
+                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="claude-3">Claude 3</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  图像识别模型
+                </label>
+                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  <option value="gpt-4-vision">GPT-4 Vision</option>
+                  <option value="claude-3-vision">Claude 3 Vision</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                温度设置
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+                defaultValue="0.7"
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <span>保守 (0)</span>
+                <span>平衡 (1)</span>
+                <span>创新 (2)</span>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors">
+                保存配置
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <header className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-8">
+              <h1 className="text-xl font-bold text-orange-400">SSRBangumi</h1>
+              <nav className="flex space-x-6">
+                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
+                  番剧首页
+                </Link>
+                <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
+                  番剧库
+                </Link>
+                <Link href="/dashboard/settings" className="text-orange-400 hover:text-orange-300 transition-colors">
+                  设置
+                </Link>
+              </nav>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-300">欢迎, {user?.username}</span>
+              <button
+                onClick={handleLogout}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors text-sm"
+              >
+                退出
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-8">
+          {/* Left Sidebar Menu */}
+          <div className="w-64 flex-shrink-0">
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-medium text-white">设置菜单</h3>
+              </div>
+              <nav className="p-2">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md text-left transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="font-medium">{item.name}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Right Content Area */}
+          <div className="flex-1">
+            {/* Success/Error Messages */}
+            {success && (
+              <div className="bg-green-900 border border-green-700 text-green-100 px-4 py-3 rounded mb-6">
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="bg-red-900 border border-red-700 text-red-100 px-4 py-3 rounded mb-6">
+                {error}
+              </div>
+            )}
+
+            {/* Dynamic Content Based on Active Tab */}
+            {activeTab === 'rss' && renderRssConfig()}
+            {activeTab === 'download' && renderDownloadConfig()}
+            {activeTab === 'ai' && renderAiConfig()}
+          </div>
         </div>
       </main>
     </div>
