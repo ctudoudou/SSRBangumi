@@ -53,6 +53,26 @@ export default function SettingsPage() {
   });
   const [rssItems, setRssItems] = useState<RssItem[]>([]);
   const [showScheduler, setShowScheduler] = useState(false);
+
+  // 下载服务配置状态
+  const [downloadConfig, setDownloadConfig] = useState({
+    rpcUrl: 'http://localhost:6800/jsonrpc',
+    rpcSecret: 'your_secret_token_here',
+    maxConcurrent: '3',
+    maxConnections: '16',
+    diskCache: '32M'
+  });
+  const [isEditingConnection, setIsEditingConnection] = useState(false);
+  
+  // AI 配置状态
+  const [aiConfig, setAiConfig] = useState({
+    apiKey: '',
+    proxyUrl: 'https://openrouter.ai/api/v1',
+    model: 'anthropic/claude-3.5-sonnet',
+    smartTorrentRecognition: false
+  });
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState<MenuTab>('rss');
@@ -577,7 +597,11 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   最大并发下载数
                 </label>
-                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <select 
+                  value={downloadConfig.maxConcurrent}
+                  onChange={(e) => setDownloadConfig({...downloadConfig, maxConcurrent: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
                   <option value="3">3</option>
                   <option value="5">5</option>
                   <option value="10">10</option>
@@ -589,7 +613,11 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   单文件最大连接数
                 </label>
-                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <select 
+                  value={downloadConfig.maxConnections}
+                  onChange={(e) => setDownloadConfig({...downloadConfig, maxConnections: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
                   <option value="16">16</option>
                   <option value="32">32</option>
                   <option value="64">64</option>
@@ -599,7 +627,11 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   磁盘缓存大小
                 </label>
-                <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <select 
+                  value={downloadConfig.diskCache}
+                  onChange={(e) => setDownloadConfig({...downloadConfig, diskCache: e.target.value})}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
                   <option value="32M">32M</option>
                   <option value="64M">64M</option>
                   <option value="128M">128M</option>
@@ -607,7 +639,10 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors">
+              <button 
+                onClick={() => setSuccess('下载配置保存成功')}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+              >
                 保存配置
               </button>
             </div>
@@ -616,7 +651,15 @@ export default function SettingsPage() {
 
         {/* 连接信息 */}
         <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-white mb-4">连接信息</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-white">连接信息</h3>
+            <button
+              onClick={() => setIsEditingConnection(!isEditingConnection)}
+              className="text-orange-400 hover:text-orange-300 text-sm transition-colors"
+            >
+              {isEditingConnection ? '取消编辑' : '编辑'}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -624,9 +667,12 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                value="http://localhost:6800/jsonrpc"
-                readOnly
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+                value={downloadConfig.rpcUrl}
+                onChange={(e) => setDownloadConfig({...downloadConfig, rpcUrl: e.target.value})}
+                readOnly={!isEditingConnection}
+                className={`w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none ${
+                  isEditingConnection ? 'focus:ring-2 focus:ring-orange-500 focus:border-transparent' : ''
+                }`}
               />
             </div>
             <div>
@@ -634,13 +680,39 @@ export default function SettingsPage() {
                 RPC 密钥
               </label>
               <input
-                type="password"
-                value="your_secret_token_here"
-                readOnly
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none"
+                type={isEditingConnection ? 'text' : 'password'}
+                value={downloadConfig.rpcSecret}
+                onChange={(e) => setDownloadConfig({...downloadConfig, rpcSecret: e.target.value})}
+                readOnly={!isEditingConnection}
+                className={`w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none ${
+                  isEditingConnection ? 'focus:ring-2 focus:ring-orange-500 focus:border-transparent' : ''
+                }`}
               />
             </div>
           </div>
+          {isEditingConnection && (
+            <div className="flex justify-end space-x-4 mt-4">
+              <button
+                onClick={() => {
+                  setIsEditingConnection(false);
+                  // 这里可以添加重置逻辑
+                }}
+                className="px-4 py-2 border border-gray-600 rounded-md text-gray-300 hover:bg-gray-700 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingConnection(false);
+                  setSuccess('连接信息保存成功');
+                  // 这里可以添加保存到后端的逻辑
+                }}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors"
+              >
+                保存
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
