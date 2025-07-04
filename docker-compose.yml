@@ -40,6 +40,48 @@ services:
     volumes:
       - ./uploads:/app/uploads
 
+  # Aria2 下载服务
+  aria2:
+    image: p3terx/aria2-pro:latest
+    container_name: ssrbangumi-aria2
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK_SET=022
+      - RPC_SECRET=your_secret_token_here
+      - RPC_PORT=6800
+      - LISTEN_PORT=6888
+      - DISK_CACHE=64M
+      - IPV6_MODE=false
+      - UPDATE_TRACKERS=true
+      - CUSTOM_TRACKER_URL=
+      - TZ=Asia/Shanghai
+    ports:
+      - "6800:6800"  # RPC 端口
+      - "6888:6888"  # BT 监听端口
+    volumes:
+      - ./downloads:/downloads
+      - aria2_config:/config
+    networks:
+      - ssrbangumi-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "1m"
+
+  # Aria2 Web UI (可选)
+  ariang:
+    image: p3terx/ariang:latest
+    container_name: ssrbangumi-ariang
+    restart: unless-stopped
+    ports:
+      - "6880:6880"
+    networks:
+      - ssrbangumi-network
+    depends_on:
+      - aria2
+
   # 可选：数据库管理工具 pgAdmin
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -60,6 +102,8 @@ volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  aria2_config:
     driver: local
 
 networks:
