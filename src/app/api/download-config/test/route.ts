@@ -4,7 +4,7 @@ import { verifyToken } from '@/lib/auth';
 // POST - 测试aria2连接
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('auth-token')?.value;
     if (!token) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
