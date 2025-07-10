@@ -54,3 +54,33 @@ export interface TestResult {
 export type MenuTab = 'rss' | 'download' | 'ai';
 
 export type ConnectionStatus = 'idle' | 'testing' | 'success' | 'error';
+
+// Theme Configuration Types
+export interface ThemeConfig {
+  id: string;
+  name: string;
+  type: 'light' | 'dark' | 'anime' | 'custom';
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+    accent: string;
+    success: string;
+    warning: string;
+    error: string;
+    border: string;
+  };
+  isDefault?: boolean;
+  isCustom?: boolean;
+}
+
+export interface StyleConfig {
+  currentTheme: string;
+  customThemes: ThemeConfig[];
+  enableAnimations: boolean;
+  fontSize: 'small' | 'medium' | 'large';
+  borderRadius: 'none' | 'small' | 'medium' | 'large';
+}

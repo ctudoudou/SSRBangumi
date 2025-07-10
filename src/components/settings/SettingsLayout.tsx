@@ -17,7 +17,8 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const menuItems = [
     { id: 'rss', name: 'RSS 配置', icon: '📡', href: '/dashboard/settings/rss' },
     { id: 'download', name: '下载服务配置', icon: '⬇️', href: '/dashboard/settings/download' },
-    { id: 'ai', name: 'AI 配置', icon: '🤖', href: '/dashboard/settings/ai' }
+    { id: 'ai', name: 'AI 配置', icon: '🤖', href: '/dashboard/settings/ai' },
+    { id: 'style', name: '样式配置', icon: '🎨', href: '/dashboard/settings/style' }
   ];
 
   const handleLogout = async () => {

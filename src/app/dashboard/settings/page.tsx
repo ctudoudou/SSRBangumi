@@ -41,7 +41,7 @@ export default function SettingsPage() {
         <p className="text-gray-400 mb-6">
           请从左侧菜单选择要配置的功能模块
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-gray-700 rounded-lg p-4">
             <div className="text-2xl mb-2">📡</div>
             <h3 className="text-white font-medium mb-1">RSS 配置</h3>
@@ -56,6 +56,11 @@ export default function SettingsPage() {
             <div className="text-2xl mb-2">🤖</div>
             <h3 className="text-white font-medium mb-1">AI 配置</h3>
             <p className="text-gray-400 text-sm">配置AI智能识别功能</p>
+          </div>
+          <div className="bg-gray-700 rounded-lg p-4">
+            <div className="text-2xl mb-2">🎨</div>
+            <h3 className="text-white font-medium mb-1">样式配置</h3>
+            <p className="text-gray-400 text-sm">自定义应用主题和外观设置</p>
           </div>
         </div>
       </div>

@@ -25,6 +25,7 @@ model User {
   rssFeeds       RssFeed[]
   aiConfig       AiConfig?
   downloadConfig DownloadConfig?
+  styleConfig    StyleConfig?
 
   @@map("users")
 }
@@ -104,4 +105,15 @@ model DownloadConfig {
   updatedAt    DateTime @updatedAt
 
   @@map("download_configs")
+}
+
+model StyleConfig {
+  id        String   @id @default(cuid())
+  config    String   // JSON string containing theme and style settings
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("style_configs")
 }

@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Default theme colors (dark) */
+  --color-primary: #f97316;
+  --color-secondary: #64748b;
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-text: #ffffff;
+  --color-textSecondary: #9ca3af;
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-border: #374151;
+  
+  /* Legacy variables for compatibility */
+  --background: var(--color-background);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
@@ -12,15 +26,52 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Theme classes */
+.theme-dark {
+  --color-primary: #f97316;
+  --color-secondary: #64748b;
+  --color-background: #111827;
+  --color-surface: #1f2937;
+  --color-text: #ffffff;
+  --color-textSecondary: #9ca3af;
+  --color-accent: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-border: #374151;
+}
+
+.theme-light {
+  --color-primary: #ea580c;
+  --color-secondary: #64748b;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #1f2937;
+  --color-textSecondary: #6b7280;
+  --color-accent: #2563eb;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-border: #e5e7eb;
+}
+
+.theme-anime {
+  --color-primary: #ff6b9d;
+  --color-secondary: #a78bfa;
+  --color-background: #fef7ff;
+  --color-surface: #fff0f9;
+  --color-text: #2d1b69;
+  --color-textSecondary: #7c3aed;
+  --color-accent: #06b6d4;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #f43f5e;
+  --color-border: #e879f9;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-text);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
