@@ -4,7 +4,7 @@ import { getUserFromToken } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('auth-token')?.value;
     if (!token) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('auth-token')?.value;
     if (!token) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
