@@ -42,7 +42,7 @@ export default function AiConfig() {
       const response = await fetch('/api/ai-config');
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config);
+        setConfig(data.aiConfig);
       } else {
         showError('获取AI配置失败');
       }

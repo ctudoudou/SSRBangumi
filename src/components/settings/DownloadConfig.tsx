@@ -24,7 +24,7 @@ export default function DownloadConfig() {
       const response = await fetch('/api/download-config');
       if (response.ok) {
         const data = await response.json();
-        setConfig(data.config);
+        setConfig(data.downloadConfig);
       } else {
         showError('获取下载配置失败');
       }
