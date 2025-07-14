@@ -26,10 +26,10 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^24.0.10",
+    "@types/node": "^24.0.13",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^9.31.0",
     "eslint-config-next": "15.4.0-canary.51",
     "tailwindcss": "^4",
     "typescript": "^5"
